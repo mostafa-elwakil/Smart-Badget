@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run server\" \"vite\"",
     "server": "node server/server.cjs",
+    "create-admin": "node server/create_admin.cjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

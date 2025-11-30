@@ -77,6 +77,18 @@ A modern, feature-rich personal finance management application built with the PE
     ```
 3.  Access the app at `http://localhost:3001`.
 
+## Creating an Admin User
+
+To access the admin features (User Management), you need to create an admin account.
+
+1.  Ensure your database is running (either locally or via Docker).
+2.  Run the following command:
+    ```bash
+    npm run create-admin
+    ```
+3.  Follow the prompts to enter the admin's Name, Email, and Password.
+    *   **Note**: If running with Docker, ensure your `.env` file's `PG_HOST` allows connection (e.g., `localhost` if the port is exposed).
+
 ## Project Structure
 
 *   `src/`: Frontend React application code.
