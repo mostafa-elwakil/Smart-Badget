@@ -3,6 +3,8 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
 
+import InstallPWA from './InstallPWA';
+
 export function Layout() {
     return (
         <div className="flex min-h-screen bg-secondary-50 dark:bg-secondary-950 transition-colors duration-300">
@@ -13,6 +15,7 @@ export function Layout() {
                 </div>
             </main>
             <BottomNav />
+            <InstallPWA />
         </div>
     );
 }
