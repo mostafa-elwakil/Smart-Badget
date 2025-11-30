@@ -30,7 +30,7 @@ A modern, feature-rich personal finance management application built with the PE
 
 1.  **Clone the repository:**
     ```bash
-    git clone [<repository-url>](https://github.com/mostafa-elwakil/Smart-Badget.git)
+    git clone https://github.com/mostafa-elwakil/Smart-Badget.git
     cd smart-budget
     ```
 
