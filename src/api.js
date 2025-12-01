@@ -42,6 +42,26 @@ export const api = {
         return res.json();
     },
 
+    forgotPassword: async (email) => {
+        const res = await fetch(`${API_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        return res.json();
+    },
+
+    resetPassword: async (token, newPassword) => {
+        const res = await fetch(`${API_URL}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, newPassword }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        return res.json();
+    },
+
     logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');

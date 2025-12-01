@@ -12,6 +12,8 @@ import Register from './pages/Register';
 import UserManagement from './pages/UserManagement';
 import Categories from './pages/Categories';
 
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 
 import { ThemeProvider } from './context/ThemeContext';
@@ -46,6 +48,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <Layout />

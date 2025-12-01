@@ -142,6 +142,70 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+app.post('/api/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    try {
+        const result = await db.query(`SELECT * FROM users WHERE email = $1`, [email]);
+        const user = result.rows[0];
+
+        if (!user) return res.status(400).json({ error: 'User not found' });
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetExpires = Date.now() + 3600000; // 1 hour
+
+        await db.query(
+            `UPDATE users SET reset_password_token = $1, reset_password_expires = $2 WHERE id = $3`,
+            [resetToken, resetExpires, user.id]
+        );
+
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        console.log(`Reset Link for ${email}: ${resetLink}`);
+
+        const mailOptions = {
+            from: process.env.EMAIL_HOST_USER,
+            to: email,
+            subject: 'Password Reset Request',
+            text: `You requested a password reset. Click the link to reset your password: ${resetLink}`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log('Error sending email:', error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
+        res.json({ message: 'Password reset link sent to your email.' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+    const { token, newPassword } = req.body;
+    try {
+        const result = await db.query(
+            `SELECT * FROM users WHERE reset_password_token = $1 AND reset_password_expires > $2`,
+            [token, Date.now()]
+        );
+        const user = result.rows[0];
+
+        if (!user) return res.status(400).json({ error: 'Invalid or expired token' });
+
+        const hashedPassword = bcrypt.hashSync(newPassword, 8);
+
+        await db.query(
+            `UPDATE users SET password = $1, reset_password_token = NULL, reset_password_expires = NULL WHERE id = $2`,
+            [hashedPassword, user.id]
+        );
+
+        res.json({ message: 'Password reset successfully' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // Expenses Routes
 app.get('/api/expenses', authenticateToken, async (req, res) => {
     try {

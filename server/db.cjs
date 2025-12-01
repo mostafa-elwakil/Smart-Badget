@@ -30,8 +30,24 @@ const initDb = async () => {
                 status TEXT DEFAULT 'Active',
                 is_verified INTEGER DEFAULT 0,
                 verification_token TEXT,
+                reset_password_token TEXT,
+                reset_password_expires BIGINT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+        `);
+
+        // Add columns if they don't exist (Migration)
+        await client.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='reset_password_token') THEN
+                    ALTER TABLE users ADD COLUMN reset_password_token TEXT;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='reset_password_expires') THEN
+                    ALTER TABLE users ADD COLUMN reset_password_expires BIGINT;
+                END IF;
+            END
+            $$;
         `);
 
         // Expenses Table
