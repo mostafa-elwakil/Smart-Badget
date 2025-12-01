@@ -67,14 +67,14 @@ const authenticateToken = (req, res, next) => {
 
 // Auth Routes
 app.post('/api/register', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, monthly_salary, expected_savings, salary_deposit_day } = req.body;
     const hashedPassword = bcrypt.hashSync(password, 8);
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
     try {
         await db.query(
-            `INSERT INTO users (name, email, password, verification_token, is_verified) VALUES ($1, $2, $3, $4, $5)`,
-            [name, email, hashedPassword, verificationToken, 0]
+            `INSERT INTO users (name, email, password, verification_token, is_verified, monthly_salary, expected_savings, salary_deposit_day) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [name, email, hashedPassword, verificationToken, 0, monthly_salary || 0, expected_savings || 0, salary_deposit_day || 1]
         );
 
         const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${verificationToken}`;
@@ -136,7 +136,18 @@ app.post('/api/login', async (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '24h' });
-        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                monthly_salary: user.monthly_salary,
+                expected_savings: user.expected_savings,
+                salary_deposit_day: user.salary_deposit_day
+            }
+        });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
@@ -265,6 +276,34 @@ app.delete('/api/income/:id', authenticateToken, async (req, res) => {
     try {
         const result = await db.query(`DELETE FROM income WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]);
         res.json({ message: 'Deleted', rowCount: result.rowCount });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/profile', authenticateToken, async (req, res) => {
+    const { name, email, monthly_salary, expected_savings, salary_deposit_day } = req.body;
+    try {
+        // Check if email is being changed and if it's already taken
+        if (email) {
+            const emailCheck = await db.query(`SELECT id FROM users WHERE email = $1 AND id != $2`, [email, req.user.id]);
+            if (emailCheck.rows.length > 0) {
+                return res.status(400).json({ error: 'Email already in use' });
+            }
+        }
+
+        const result = await db.query(
+            `UPDATE users SET
+                name = COALESCE($1, name),
+                email = COALESCE($2, email),
+                monthly_salary = COALESCE($3, monthly_salary),
+                expected_savings = COALESCE($4, expected_savings),
+                salary_deposit_day = COALESCE($5, salary_deposit_day)
+            WHERE id = $6
+            RETURNING id, name, email, role, monthly_salary, expected_savings, salary_deposit_day`,
+            [name, email, monthly_salary, expected_savings, salary_deposit_day, req.user.id]
+        );
+        res.json({ message: 'Profile updated', user: result.rows[0] });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

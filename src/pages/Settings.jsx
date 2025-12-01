@@ -10,6 +10,31 @@ export default function Settings() {
     const { theme, toggleTheme } = useTheme();
     const { currency, setCurrency } = useCurrency();
 
+    const [user, setUser] = React.useState(JSON.parse(localStorage.getItem('user') || '{}'));
+    const [name, setName] = React.useState(user.name || '');
+    const [email, setEmail] = React.useState(user.email || '');
+    const [monthlySalary, setMonthlySalary] = React.useState(user.monthly_salary || '');
+    const [expectedSavings, setExpectedSavings] = React.useState(user.expected_savings || '');
+    const [salaryDepositDay, setSalaryDepositDay] = React.useState(user.salary_deposit_day || '');
+    const [message, setMessage] = React.useState('');
+
+    const handleUpdateProfile = async () => {
+        try {
+            const updatedUser = await import('../api').then(module => module.api.updateProfile({
+                name,
+                email,
+                monthly_salary: monthlySalary,
+                expected_savings: expectedSavings,
+                salary_deposit_day: salaryDepositDay
+            }));
+            setUser(updatedUser.user);
+            setMessage('Profile updated successfully');
+            setTimeout(() => setMessage(''), 3000);
+        } catch (err) {
+            setMessage(err.message);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in">
             <div>
@@ -26,15 +51,30 @@ export default function Settings() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {message && <div className={`text-sm ${message.includes('success') ? 'text-green-500' : 'text-red-500'}`}>{message}</div>}
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Full Name</label>
-                            <Input defaultValue="John Doe" />
+                            <Input value={name} onChange={(e) => setName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Email</label>
-                            <Input defaultValue="john@example.com" type="email" />
+                            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
                         </div>
-                        <Button>Save Changes</Button>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Monthly Salary</label>
+                                <Input type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Expected Savings</label>
+                                <Input type="number" value={expectedSavings} onChange={(e) => setExpectedSavings(e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Salary Deposit Day</label>
+                            <Input type="number" min="1" max="31" value={salaryDepositDay} onChange={(e) => setSalaryDepositDay(e.target.value)} />
+                        </div>
+                        <Button onClick={handleUpdateProfile}>Save Changes</Button>
                     </CardContent>
                 </Card>
 

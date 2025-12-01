@@ -32,6 +32,9 @@ const initDb = async () => {
                 verification_token TEXT,
                 reset_password_token TEXT,
                 reset_password_expires BIGINT,
+                monthly_salary REAL DEFAULT 0,
+                expected_savings REAL DEFAULT 0,
+                salary_deposit_day INTEGER DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -45,6 +48,15 @@ const initDb = async () => {
                 END IF;
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='reset_password_expires') THEN
                     ALTER TABLE users ADD COLUMN reset_password_expires BIGINT;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='monthly_salary') THEN
+                    ALTER TABLE users ADD COLUMN monthly_salary REAL DEFAULT 0;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='expected_savings') THEN
+                    ALTER TABLE users ADD COLUMN expected_savings REAL DEFAULT 0;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='salary_deposit_day') THEN
+                    ALTER TABLE users ADD COLUMN salary_deposit_day INTEGER DEFAULT 1;
                 END IF;
             END
             $$;

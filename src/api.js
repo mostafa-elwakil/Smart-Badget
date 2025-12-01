@@ -22,14 +22,30 @@ export const api = {
         return data;
     },
 
-    register: async (name, email, password) => {
+    register: async (name, email, password, monthly_salary, expected_savings, salary_deposit_day) => {
         const res = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password }),
+            body: JSON.stringify({ name, email, password, monthly_salary, expected_savings, salary_deposit_day }),
         });
         if (!res.ok) throw new Error((await res.json()).error);
         return res.json(); // Returns message
+    },
+
+    updateProfile: async (data) => {
+        const res = await fetch(`${API_URL}/profile`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        const responseData = await res.json();
+        // Update local storage if successful
+        if (responseData.user) {
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem('user', JSON.stringify({ ...currentUser, ...responseData.user }));
+        }
+        return responseData;
     },
 
     verifyEmail: async (token) => {

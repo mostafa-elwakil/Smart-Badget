@@ -11,6 +11,9 @@ export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [monthlySalary, setMonthlySalary] = useState('');
+    const [expectedSavings, setExpectedSavings] = useState('');
+    const [salaryDepositDay, setSalaryDepositDay] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
@@ -23,7 +26,7 @@ export default function Register() {
             return;
         }
         try {
-            await api.register(name, email, password);
+            await api.register(name, email, password, monthlySalary, expectedSavings, salaryDepositDay);
             setSuccess(true);
         } catch (err) {
             setError(err.message);
@@ -99,6 +102,42 @@ export default function Register() {
                                 placeholder="••••••••"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Monthly Salary</label>
+                                <Input
+                                    type="number"
+                                    placeholder="5000"
+                                    value={monthlySalary}
+                                    onChange={(e) => setMonthlySalary(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Expected Savings</label>
+                                <Input
+                                    type="number"
+                                    placeholder="1000"
+                                    value={expectedSavings}
+                                    onChange={(e) => setExpectedSavings(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Salary Deposit Day</label>
+                            <Input
+                                type="number"
+                                min="1"
+                                max="31"
+                                placeholder="Day of month (1-31)"
+                                value={salaryDepositDay}
+                                onChange={(e) => setSalaryDepositDay(e.target.value)}
                                 required
                             />
                         </div>
