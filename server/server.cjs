@@ -17,7 +17,17 @@ const SECRET_KEY = process.env.SECRET_KEY || 'default-secret-key';
 
 // Security Middleware
 // Security Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"],
+            connectSrc: ["'self'", "http://localhost:3001", process.env.FRONTEND_URL, "https://static.cloudflareinsights.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+        },
+    },
+}));
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -67,7 +77,7 @@ app.post('/api/register', async (req, res) => {
             [name, email, hashedPassword, verificationToken, 0]
         );
 
-        const verificationLink = `http://localhost:5173/verify?token=${verificationToken}`;
+        const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${verificationToken}`;
         console.log(`Verification Link for ${email}: ${verificationLink}`);
 
         const mailOptions = {
