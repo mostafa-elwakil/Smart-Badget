@@ -29,10 +29,12 @@ app.use('/api/', limiter);
 
 // Email Transporter (Configure with your SMTP details)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: false, // true for 465, false for other ports
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_HOST_USER,
+        pass: process.env.EMAIL_HOST_PASSWORD
     }
 });
 
@@ -69,7 +71,7 @@ app.post('/api/register', async (req, res) => {
         console.log(`Verification Link for ${email}: ${verificationLink}`);
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: process.env.EMAIL_HOST_USER,
             to: email,
             subject: 'Verify your email',
             text: `Please verify your email by clicking the following link: ${verificationLink}`
