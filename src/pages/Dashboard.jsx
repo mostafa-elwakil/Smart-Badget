@@ -1,19 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { ArrowUpRight, ArrowDownRight, DollarSign, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
-
-const data = [
-    { name: 'Jan', income: 4000, expense: 2400 },
-    { name: 'Feb', income: 3000, expense: 1398 },
-    { name: 'Mar', income: 2000, expense: 9800 },
-    { name: 'Apr', income: 2780, expense: 3908 },
-    { name: 'May', income: 1890, expense: 4800 },
-    { name: 'Jun', income: 2390, expense: 3800 },
-    { name: 'Jul', income: 3490, expense: 4300 },
-];
+import { api } from '../api';
+import { formatDate } from '../lib/utils';
 
 const SummaryCard = ({ title, amount, icon: Icon, trend, trendValue, type }) => {
     const { formatPrice } = useCurrency();
@@ -30,13 +22,14 @@ const SummaryCard = ({ title, amount, icon: Icon, trend, trendValue, type }) => 
                 <div className="flex items-baseline justify-between">
                     <h2 className="text-2xl font-bold">{formatPrice(amount)}</h2>
                 </div>
-                <div className="mt-2 flex items-center text-xs">
+                {/* Trend logic can be added later if historical data is sufficient */}
+                {/* <div className="mt-2 flex items-center text-xs">
                     <span className={`flex items-center ${trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {trend === 'up' ? <ArrowUpRight className="mr-1 h-3 w-3" /> : <ArrowDownRight className="mr-1 h-3 w-3" />}
                         {trendValue}
                     </span>
                     <span className="ml-1 text-secondary-500 dark:text-secondary-400">from last month</span>
-                </div>
+                </div> */}
             </CardContent>
         </Card>
     );
@@ -45,6 +38,88 @@ const SummaryCard = ({ title, amount, icon: Icon, trend, trendValue, type }) => 
 export default function Dashboard() {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
+    const [stats, setStats] = useState({
+        totalBalance: 0,
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        savings: 0,
+    });
+    const [chartData, setChartData] = useState([]);
+    const [recentTransactions, setRecentTransactions] = useState([]);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    const loadDashboardData = async () => {
+        try {
+            const [expenses, income] = await Promise.all([
+                api.getExpenses(),
+                api.getIncome()
+            ]);
+
+            calculateStats(expenses, income);
+            prepareChartData(expenses, income);
+            prepareRecentTransactions(expenses, income);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const calculateStats = (expenses, income) => {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
+        const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
+
+        const monthlyIncome = income
+            .filter(item => {
+                const date = new Date(item.date);
+                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+            })
+            .reduce((sum, item) => sum + item.amount, 0);
+
+        const monthlyExpenses = expenses
+            .filter(item => {
+                const date = new Date(item.date);
+                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+            })
+            .reduce((sum, item) => sum + item.amount, 0);
+
+        setStats({
+            totalBalance: totalIncome - totalExpenses,
+            monthlyIncome,
+            monthlyExpenses,
+            savings: monthlyIncome - monthlyExpenses // Simple savings calc
+        });
+    };
+
+    const prepareChartData = (expenses, income) => {
+        // Group by month for the last 6 months or current year
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const data = months.map((month, index) => {
+            const monthIncome = income
+                .filter(item => new Date(item.date).getMonth() === index)
+                .reduce((sum, item) => sum + item.amount, 0);
+            const monthExpense = expenses
+                .filter(item => new Date(item.date).getMonth() === index)
+                .reduce((sum, item) => sum + item.amount, 0);
+            return { name: month, income: monthIncome, expense: monthExpense };
+        });
+        // Filter out months with no data if desired, or keep all
+        setChartData(data);
+    };
+
+    const prepareRecentTransactions = (expenses, income) => {
+        const combined = [
+            ...expenses.map(e => ({ ...e, type: 'expense' })),
+            ...income.map(i => ({ ...i, type: 'income' }))
+        ];
+        combined.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setRecentTransactions(combined.slice(0, 5));
+    };
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -54,10 +129,10 @@ export default function Dashboard() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <SummaryCard title={t('totalBalance')} amount={12450.00} icon={DollarSign} trend="up" trendValue="+2.5%" type="balance" />
-                <SummaryCard title={t('monthlyIncome')} amount={4500.00} icon={ArrowUpRight} trend="up" trendValue="+4.1%" type="income" />
-                <SummaryCard title={t('monthlyExpenses')} amount={2350.00} icon={ArrowDownRight} trend="down" trendValue="-1.2%" type="expense" />
-                <SummaryCard title={t('savings')} amount={2150.00} icon={CreditCard} trend="up" trendValue="+10%" type="balance" />
+                <SummaryCard title={t('totalBalance')} amount={stats.totalBalance} icon={DollarSign} trend="up" trendValue="+0%" type="balance" />
+                <SummaryCard title={t('monthlyIncome')} amount={stats.monthlyIncome} icon={ArrowUpRight} trend="up" trendValue="+0%" type="income" />
+                <SummaryCard title={t('monthlyExpenses')} amount={stats.monthlyExpenses} icon={ArrowDownRight} trend="down" trendValue="-0%" type="expense" />
+                <SummaryCard title={t('savings')} amount={stats.savings} icon={CreditCard} trend="up" trendValue="+0%" type="balance" />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -68,7 +143,7 @@ export default function Dashboard() {
                     <CardContent className="pl-2">
                         <div className="h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={data}>
+                                <AreaChart data={chartData}>
                                     <defs>
                                         <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
@@ -97,26 +172,23 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-8">
-                            {[
-                                { name: 'Grocery Store', amount: -120.50, date: 'Today', type: 'expense' },
-                                { name: 'Salary Deposit', amount: 3500.00, date: 'Yesterday', type: 'income' },
-                                { name: 'Electric Bill', amount: -85.00, date: '2 days ago', type: 'expense' },
-                                { name: 'Freelance Work', amount: 450.00, date: '3 days ago', type: 'income' },
-                                { name: 'Netflix Subscription', amount: -15.99, date: '1 week ago', type: 'expense' },
-                            ].map((item, i) => (
+                            {recentTransactions.map((item, i) => (
                                 <div key={i} className="flex items-center">
                                     <div className={`h-9 w-9 rounded-full flex items-center justify-center ${item.type === 'income' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
                                         {item.type === 'income' ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
                                     </div>
                                     <div className="ml-4 space-y-1">
-                                        <p className="text-sm font-medium leading-none">{item.name}</p>
-                                        <p className="text-xs text-secondary-500 dark:text-secondary-400">{item.date}</p>
+                                        <p className="text-sm font-medium leading-none">{item.title || item.name}</p>
+                                        <p className="text-xs text-secondary-500 dark:text-secondary-400">{formatDate(item.date)}</p>
                                     </div>
                                     <div className={`ml-auto font-medium ${item.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                        {item.type === 'income' ? '+' : ''}{formatPrice(item.amount)}
+                                        {item.type === 'income' ? '+' : '-'}{formatPrice(item.amount)}
                                     </div>
                                 </div>
                             ))}
+                            {recentTransactions.length === 0 && (
+                                <p className="text-center text-secondary-500">No recent transactions</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
