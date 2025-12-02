@@ -8,6 +8,7 @@ import { formatDate } from '../lib/utils';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api';
+import { DEFAULT_CATEGORIES } from '../lib/constants';
 
 export default function Expenses() {
     const { t } = useLanguage();
@@ -33,10 +34,23 @@ export default function Expenses() {
 
     const loadCategories = async () => {
         try {
-            const data = await api.getCategories();
-            setCategories(data.filter(c => c.type === 'expense'));
+            const apiCategories = await api.getCategories();
+            const userExpenseCategories = apiCategories.filter(c => c.type === 'expense');
+            const defaultExpenseCategories = DEFAULT_CATEGORIES.filter(c => c.type === 'expense');
+
+            // Merge defaults and user categories, avoiding duplicates by name
+            const mergedCategories = [...defaultExpenseCategories];
+            userExpenseCategories.forEach(cat => {
+                if (!mergedCategories.find(c => c.name === cat.name)) {
+                    mergedCategories.push(cat);
+                }
+            });
+
+            setCategories(mergedCategories);
         } catch (err) {
             console.error(err);
+            // Fallback to defaults if API fails
+            setCategories(DEFAULT_CATEGORIES.filter(c => c.type === 'expense'));
         }
     };
 
@@ -151,17 +165,9 @@ export default function Expenses() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium">{t('category')}</label>
                         <select name="category" className="flex h-10 w-full rounded-lg border border-secondary-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:bg-secondary-900 dark:border-secondary-700 dark:text-secondary-50">
-                            {categories.length > 0 ? categories.map(cat => (
-                                <option key={cat.id} value={cat.name}>{cat.name}</option>
-                            )) : (
-                                <>
-                                    <option>Food</option>
-                                    <option>Transport</option>
-                                    <option>Utilities</option>
-                                    <option>Entertainment</option>
-                                    <option>Other</option>
-                                </>
-                            )}
+                            {categories.map((cat, index) => (
+                                <option key={cat.id || `default-${index}`} value={cat.name}>{cat.name}</option>
+                            ))}
                         </select>
                     </div>
                     <div className="space-y-2">

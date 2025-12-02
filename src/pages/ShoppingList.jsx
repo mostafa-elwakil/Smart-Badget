@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Modal } from '../components/ui/Modal';
 import { Plus, Check, Trash2, ShoppingCart } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useCurrency } from '../context/CurrencyContext';
@@ -14,6 +15,12 @@ export default function ShoppingList() {
     const [newItem, setNewItem] = useState('');
     const [newPrice, setNewPrice] = useState('');
     const { formatPrice } = useCurrency();
+
+    // Purchase Modal State
+    const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [purchasePrice, setPurchasePrice] = useState('');
+    const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
 
     useEffect(() => {
         loadItems();
@@ -44,9 +51,46 @@ export default function ShoppingList() {
 
     const toggleItem = async (id) => {
         const item = items.find(i => i.id === id);
+        if (!item.purchased) {
+            // If marking as purchased, open modal
+            setSelectedItem(item);
+            setPurchasePrice(item.price.toString());
+            setPurchaseDate(new Date().toISOString().split('T')[0]);
+            setIsPurchaseModalOpen(true);
+        } else {
+            // If unmarking, just toggle
+            try {
+                await api.updateShoppingItem(id, { purchased: false });
+                setItems(items.map(i => i.id === id ? { ...i, purchased: false } : i));
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
+
+    const handlePurchaseConfirm = async (e) => {
+        e.preventDefault();
+        if (!selectedItem) return;
+
         try {
-            await api.updateShoppingItem(id, { purchased: !item.purchased });
-            setItems(items.map(i => i.id === id ? { ...i, purchased: !i.purchased } : i));
+            // 1. Update shopping item as purchased
+            await api.updateShoppingItem(selectedItem.id, { purchased: true });
+
+            // 2. Add as expense
+            const expense = {
+                title: selectedItem.name,
+                amount: parseFloat(purchasePrice) || 0,
+                category: 'Shopping', // Default category for shopping list items
+                date: purchaseDate
+            };
+            await api.addExpense(expense);
+
+            // 3. Update local state
+            setItems(items.map(i => i.id === selectedItem.id ? { ...i, purchased: true, price: parseFloat(purchasePrice) || i.price } : i));
+
+            // 4. Close modal
+            setIsPurchaseModalOpen(false);
+            setSelectedItem(null);
         } catch (err) {
             console.error(err);
         }
@@ -166,6 +210,41 @@ export default function ShoppingList() {
                     </Card>
                 </div>
             </div>
+
+            <Modal isOpen={isPurchaseModalOpen} onClose={() => setIsPurchaseModalOpen(false)} title="Confirm Purchase">
+                <form onSubmit={handlePurchaseConfirm} className="space-y-4">
+                    <p className="text-sm text-secondary-500">
+                        Confirming this item will mark it as purchased and add it to your expenses.
+                    </p>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">{t('title')}</label>
+                        <Input value={selectedItem?.name || ''} disabled />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Actual Price</label>
+                        <Input
+                            type="number"
+                            value={purchasePrice}
+                            onChange={(e) => setPurchasePrice(e.target.value)}
+                            step="0.01"
+                            required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">{t('date')}</label>
+                        <Input
+                            type="date"
+                            value={purchaseDate}
+                            onChange={(e) => setPurchaseDate(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                        <Button type="button" variant="secondary" onClick={() => setIsPurchaseModalOpen(false)}>Cancel</Button>
+                        <Button type="submit">Confirm Purchase</Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }

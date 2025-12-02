@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import { DEFAULT_CATEGORIES } from '../lib/constants';
 
 export default function Categories() {
     const { t } = useLanguage();
@@ -29,8 +30,12 @@ export default function Categories() {
     const handleAddCategory = async (e) => {
         e.preventDefault();
         if (!newCategory) return;
+        addCategory(newCategory, selectedColor, type);
+    };
+
+    const addCategory = async (name, color, type) => {
         try {
-            const added = await api.addCategory({ name: newCategory, color: selectedColor, type });
+            const added = await api.addCategory({ name, color, type });
             setCategories([...categories, added]);
             setNewCategory('');
         } catch (err) {
@@ -48,6 +53,11 @@ export default function Categories() {
     };
 
     const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-gray-500'];
+
+    // Filter out defaults that are already in user categories
+    const suggestions = DEFAULT_CATEGORIES.filter(def =>
+        !categories.some(userCat => userCat.name === def.name && userCat.type === def.type)
+    );
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -97,6 +107,25 @@ export default function Categories() {
                             </div>
                             <Button type="submit">{t('addCategory')}</Button>
                         </form>
+
+                        {suggestions.length > 0 && (
+                            <div className="mt-6">
+                                <h3 className="text-sm font-medium mb-3 text-secondary-500">Suggested Categories</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {suggestions.map((s, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => addCategory(s.name, s.color, s.type)}
+                                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors`}
+                                        >
+                                            <div className={`w-2 h-2 rounded-full mr-2 ${s.color}`}></div>
+                                            {s.name} <span className="ml-1 opacity-50">({s.type})</span>
+                                            <Plus className="ml-2 h-3 w-3" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -106,6 +135,9 @@ export default function Categories() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                            {categories.length === 0 && (
+                                <p className="text-center text-secondary-500 py-4">No custom categories yet.</p>
+                            )}
                             {categories.map(cat => (
                                 <div key={cat.id} className="flex items-center justify-between p-3 border border-secondary-100 rounded-lg bg-white dark:bg-secondary-800 dark:border-secondary-700">
                                     <div className="flex items-center gap-3">

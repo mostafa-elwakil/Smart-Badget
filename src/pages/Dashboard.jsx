@@ -22,14 +22,6 @@ const SummaryCard = ({ title, amount, icon: Icon, trend, trendValue, type }) => 
                 <div className="flex items-baseline justify-between">
                     <h2 className="text-2xl font-bold">{formatPrice(amount)}</h2>
                 </div>
-                {/* Trend logic can be added later if historical data is sufficient */}
-                {/* <div className="mt-2 flex items-center text-xs">
-                    <span className={`flex items-center ${trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {trend === 'up' ? <ArrowUpRight className="mr-1 h-3 w-3" /> : <ArrowDownRight className="mr-1 h-3 w-3" />}
-                        {trendValue}
-                    </span>
-                    <span className="ml-1 text-secondary-500 dark:text-secondary-400">from last month</span>
-                </div> */}
             </CardContent>
         </Card>
     );
@@ -67,6 +59,9 @@ export default function Dashboard() {
     };
 
     const calculateStats = (expenses, income) => {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const baseSalary = parseFloat(user.monthly_salary) || 0;
+
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
@@ -74,14 +69,8 @@ export default function Dashboard() {
         const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
         const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
 
-        const monthlyIncome = income
-            .filter(item => {
-                const date = new Date(item.date);
-                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-            })
-            .reduce((sum, item) => sum + item.amount, 0);
-
-        const monthlyExpenses = expenses
+        // Monthly Income = Base Salary + Income records for this month
+        const monthlyIncomeRecords = income
             .filter(item => {
                 const date = new Date(item.date);
                 return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
@@ -89,26 +78,30 @@ export default function Dashboard() {
             .reduce((sum, item) => sum + item.amount, 0);
 
         setStats({
-            totalBalance: totalIncome - totalExpenses,
-            monthlyIncome,
+            totalBalance: totalIncome - totalExpenses + baseSalary,
+            monthlyIncome: totalMonthlyIncome,
             monthlyExpenses,
-            savings: monthlyIncome - monthlyExpenses // Simple savings calc
+            savings: totalMonthlyIncome - monthlyExpenses
         });
     };
 
     const prepareChartData = (expenses, income) => {
-        // Group by month for the last 6 months or current year
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const baseSalary = parseFloat(user.monthly_salary) || 0;
+
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const data = months.map((month, index) => {
-            const monthIncome = income
+            const monthIncomeRecords = income
                 .filter(item => new Date(item.date).getMonth() === index)
                 .reduce((sum, item) => sum + item.amount, 0);
+
+            const monthIncome = monthIncomeRecords + baseSalary;
+
             const monthExpense = expenses
                 .filter(item => new Date(item.date).getMonth() === index)
                 .reduce((sum, item) => sum + item.amount, 0);
             return { name: month, income: monthIncome, expense: monthExpense };
         });
-        // Filter out months with no data if desired, or keep all
         setChartData(data);
     };
 
