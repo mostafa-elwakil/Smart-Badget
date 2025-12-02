@@ -3,23 +3,25 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Wallet, TrendingUp, ShoppingCart, PieChart, Settings, LogOut, Tags, Users } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { api } from '../api';
-
-const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Wallet, label: 'Expenses', path: '/expenses' },
-    { icon: TrendingUp, label: 'Income', path: '/income' },
-    { icon: ShoppingCart, label: 'Shopping', path: '/shopping' },
-    { icon: PieChart, label: 'Summary', path: '/summary' },
-    { icon: Tags, label: 'Categories', path: '/categories' },
-    { icon: Users, label: 'Users', path: '/users' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export function Sidebar() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const { t } = useLanguage();
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+
+    const navItems = [
+        { icon: LayoutDashboard, label: t('dashboard'), path: '/' },
+        { icon: Wallet, label: t('expenses'), path: '/expenses' },
+        { icon: TrendingUp, label: t('income'), path: '/income' },
+        { icon: ShoppingCart, label: t('shopping'), path: '/shopping' },
+        { icon: PieChart, label: t('summary'), path: '/summary' },
+        { icon: Tags, label: t('categories'), path: '/categories' },
+        { icon: Users, label: t('users'), path: '/users', role: 'Admin' },
+        { icon: Settings, label: t('settings'), path: '/settings' },
+    ];
 
     const filteredNavItems = navItems.filter(item => {
-        if (item.label === 'Users') {
+        if (item.role === 'Admin') {
             return user.role === 'Admin';
         }
         return true;
@@ -58,7 +60,7 @@ export function Sidebar() {
                     className="flex items-center gap-3 px-4 py-3 w-full text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900 rounded-lg transition-colors dark:text-secondary-400 dark:hover:bg-secondary-700 dark:hover:text-secondary-50"
                 >
                     <LogOut className="h-5 w-5" />
-                    Logout
+                    {t('logout')}
                 </button>
             </div>
         </aside>

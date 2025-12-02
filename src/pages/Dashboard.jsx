@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { ArrowUpRight, ArrowDownRight, DollarSign, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const data = [
     { name: 'Jan', income: 4000, expense: 2400 },
@@ -43,25 +44,26 @@ const SummaryCard = ({ title, amount, icon: Icon, trend, trendValue, type }) => 
 
 export default function Dashboard() {
     const { formatPrice } = useCurrency();
+    const { t } = useLanguage();
 
     return (
         <div className="space-y-6 animate-fade-in">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-                <p className="text-secondary-500 dark:text-secondary-400">Overview of your financial status.</p>
+                <h2 className="text-3xl font-bold tracking-tight">{t('dashboard')}</h2>
+                <p className="text-secondary-500 dark:text-secondary-400">{t('overview')}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <SummaryCard title="Total Balance" amount={12450.00} icon={DollarSign} trend="up" trendValue="+2.5%" type="balance" />
-                <SummaryCard title="Monthly Income" amount={4500.00} icon={ArrowUpRight} trend="up" trendValue="+4.1%" type="income" />
-                <SummaryCard title="Monthly Expenses" amount={2350.00} icon={ArrowDownRight} trend="down" trendValue="-1.2%" type="expense" />
-                <SummaryCard title="Savings" amount={2150.00} icon={CreditCard} trend="up" trendValue="+10%" type="balance" />
+                <SummaryCard title={t('totalBalance')} amount={12450.00} icon={DollarSign} trend="up" trendValue="+2.5%" type="balance" />
+                <SummaryCard title={t('monthlyIncome')} amount={4500.00} icon={ArrowUpRight} trend="up" trendValue="+4.1%" type="income" />
+                <SummaryCard title={t('monthlyExpenses')} amount={2350.00} icon={ArrowDownRight} trend="down" trendValue="-1.2%" type="expense" />
+                <SummaryCard title={t('savings')} amount={2150.00} icon={CreditCard} trend="up" trendValue="+10%" type="balance" />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-4">
                     <CardHeader>
-                        <CardTitle>Overview</CardTitle>
+                        <CardTitle>{t('overview')}</CardTitle>
                     </CardHeader>
                     <CardContent className="pl-2">
                         <div className="h-[300px]">
@@ -91,7 +93,7 @@ export default function Dashboard() {
 
                 <Card className="col-span-3">
                     <CardHeader>
-                        <CardTitle>Recent Transactions</CardTitle>
+                        <CardTitle>{t('recentTransactions')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-8">

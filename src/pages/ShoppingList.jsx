@@ -5,9 +5,11 @@ import { Input } from '../components/ui/Input';
 import { Plus, Check, Trash2, ShoppingCart } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api';
 
 export default function ShoppingList() {
+    const { t } = useLanguage();
     const [items, setItems] = useState([]);
     const [newItem, setNewItem] = useState('');
     const [newPrice, setNewPrice] = useState('');
@@ -65,7 +67,7 @@ export default function ShoppingList() {
     return (
         <div className="space-y-6 animate-fade-in">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">Shopping List</h2>
+                <h2 className="text-3xl font-bold tracking-tight">{t('shopping')}</h2>
                 <p className="text-secondary-500">Plan your purchases.</p>
             </div>
 
@@ -73,19 +75,19 @@ export default function ShoppingList() {
                 <div className="md:col-span-2 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Add Item</CardTitle>
+                            <CardTitle>{t('addItem')}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={addItem} className="flex gap-2">
                                 <Input
-                                    placeholder="Item name"
+                                    placeholder={t('title')}
                                     value={newItem}
                                     onChange={(e) => setNewItem(e.target.value)}
                                     className="flex-1"
                                 />
                                 <Input
                                     type="number"
-                                    placeholder="Price"
+                                    placeholder={t('amount')}
                                     value={newPrice}
                                     onChange={(e) => setNewPrice(e.target.value)}
                                     className="w-24"
@@ -139,7 +141,7 @@ export default function ShoppingList() {
                 <div className="space-y-6">
                     <Card className="bg-primary-50 border-primary-100 dark:bg-primary-900/20 dark:border-primary-800">
                         <CardHeader>
-                            <CardTitle className="text-primary-900 dark:text-primary-100">Summary</CardTitle>
+                            <CardTitle className="text-primary-900 dark:text-primary-100">{t('summary')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex justify-between text-sm">

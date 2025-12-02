@@ -100,6 +100,19 @@ const initDb = async () => {
             )
         `);
 
+        // Categories Table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS categories (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                name TEXT,
+                type TEXT, -- 'income' or 'expense'
+                color TEXT,
+                icon TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
     } catch (err) {
         console.error('Error initializing database:', err);
     } finally {

@@ -17,8 +17,9 @@ import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 
 import { ThemeProvider } from './context/ThemeContext';
-import { CurrencyProvider } from './context/CurrencyContext';
+import { LanguageProvider } from './context/LanguageContext';
 
+import { CurrencyProvider } from './context/CurrencyContext';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
@@ -30,7 +31,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const AdminRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = JSON.parse(localStorage.getItem('user')) || {};
   if (user.role !== 'Admin') {
     return <Navigate to="/" replace />;
   }
@@ -39,36 +40,36 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   return (
-    <ThemeProvider>
-      <CurrencyProvider>
-        <Router>
-          <Routes>
-
-
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/verify" element={<VerifyEmail />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Dashboard />} />
-              <Route path="expenses" element={<Expenses />} />
-              <Route path="income" element={<Income />} />
-              <Route path="shopping" element={<ShoppingList />} />
-              <Route path="summary" element={<MonthlySummary />} />
-              <Route path="categories" element={<Categories />} />
-              <Route path="users" element={<AdminRoute><UserManagement /></AdminRoute>} />
-              <Route path="admin" element={<AdminRoute><UserManagement /></AdminRoute>} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-          </Routes>
-        </Router>
-      </CurrencyProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <CurrencyProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/verify" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Dashboard />} />
+                <Route path="expenses" element={<Expenses />} />
+                <Route path="income" element={<Income />} />
+                <Route path="shopping" element={<ShoppingList />} />
+                <Route path="summary" element={<MonthlySummary />} />
+                <Route path="categories" element={<Categories />} />
+                <Route path="users" element={<AdminRoute><UserManagement /></AdminRoute>} />
+                <Route path="admin" element={<AdminRoute><UserManagement /></AdminRoute>} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+            </Routes>
+          </Router>
+        </CurrencyProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }
 

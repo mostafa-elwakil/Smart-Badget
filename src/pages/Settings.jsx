@@ -5,12 +5,14 @@ import { Input } from '../components/ui/Input';
 import { Bell, Moon, Shield, User } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Settings() {
     const { theme, toggleTheme } = useTheme();
     const { currency, setCurrency } = useCurrency();
+    const { language, setLanguage, t } = useLanguage();
 
-    const [user, setUser] = React.useState(JSON.parse(localStorage.getItem('user') || '{}'));
+    const [user, setUser] = React.useState(JSON.parse(localStorage.getItem('user')) || {});
     const [name, setName] = React.useState(user.name || '');
     const [email, setEmail] = React.useState(user.email || '');
     const [monthlySalary, setMonthlySalary] = React.useState(user.monthly_salary || '');
@@ -38,8 +40,8 @@ export default function Settings() {
     return (
         <div className="space-y-6 animate-fade-in">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-                <p className="text-secondary-500 dark:text-secondary-400">Manage your account and preferences.</p>
+                <h2 className="text-3xl font-bold tracking-tight">{t('settings')}</h2>
+                <p className="text-secondary-500 dark:text-secondary-400">{t('overview')}</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -47,34 +49,34 @@ export default function Settings() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <User className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                            Profile
+                            {t('profile')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {message && <div className={`text-sm ${message.includes('success') ? 'text-green-500' : 'text-red-500'}`}>{message}</div>}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Full Name</label>
+                            <label className="text-sm font-medium">{t('fullName')}</label>
                             <Input value={name} onChange={(e) => setName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Email</label>
+                            <label className="text-sm font-medium">{t('email')}</label>
                             <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Monthly Salary</label>
+                                <label className="text-sm font-medium">{t('monthlySalary')}</label>
                                 <Input type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Expected Savings</label>
+                                <label className="text-sm font-medium">{t('expectedSavings')}</label>
                                 <Input type="number" value={expectedSavings} onChange={(e) => setExpectedSavings(e.target.value)} />
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Salary Deposit Day</label>
+                            <label className="text-sm font-medium">{t('salaryDepositDay')}</label>
                             <Input type="number" min="1" max="31" value={salaryDepositDay} onChange={(e) => setSalaryDepositDay(e.target.value)} />
                         </div>
-                        <Button onClick={handleUpdateProfile}>Save Changes</Button>
+                        <Button onClick={handleUpdateProfile}>{t('saveChanges')}</Button>
                     </CardContent>
                 </Card>
 
@@ -82,19 +84,19 @@ export default function Settings() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Shield className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                            Security
+                            {t('security')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Current Password</label>
+                            <label className="text-sm font-medium">{t('password')}</label>
                             <Input type="password" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">New Password</label>
+                            <label className="text-sm font-medium">{t('confirmPassword')}</label>
                             <Input type="password" />
                         </div>
-                        <Button variant="secondary">Update Password</Button>
+                        <Button variant="secondary">{t('saveChanges')}</Button>
                     </CardContent>
                 </Card>
 
@@ -102,7 +104,7 @@ export default function Settings() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Bell className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                            Notifications
+                            {t('notifications')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -125,12 +127,12 @@ export default function Settings() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Moon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                            Appearance
+                            {t('appearance')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Dark Mode</span>
+                            <span className="text-sm font-medium">{t('darkMode')}</span>
                             <input
                                 type="checkbox"
                                 className="toggle"
@@ -139,7 +141,7 @@ export default function Settings() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Currency</label>
+                            <label className="text-sm font-medium">{t('currency')}</label>
                             <select
                                 value={currency}
                                 onChange={(e) => setCurrency(e.target.value)}
@@ -150,6 +152,17 @@ export default function Settings() {
                                 <option value="GBP">GBP (£)</option>
                                 <option value="EGP">EGP (E£)</option>
                                 <option value="SAR">SAR (ر.س)</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">{t('language')}</label>
+                            <select
+                                value={language}
+                                onChange={(e) => setLanguage(e.target.value)}
+                                className="flex h-10 w-full rounded-lg border border-secondary-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:bg-secondary-900 dark:border-secondary-700 dark:text-secondary-50"
+                            >
+                                <option value="en">{t('english')}</option>
+                                <option value="ar">{t('arabic')}</option>
                             </select>
                         </div>
                     </CardContent>

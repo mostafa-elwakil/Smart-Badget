@@ -403,6 +403,38 @@ app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
+// Categories Routes
+app.get('/api/categories', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`SELECT * FROM categories WHERE user_id = $1 ORDER BY name ASC`, [req.user.id]);
+        res.json(result.rows);
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/categories', authenticateToken, async (req, res) => {
+    const { name, type, color, icon } = req.body;
+    try {
+        const result = await db.query(
+            `INSERT INTO categories (user_id, name, type, color, icon) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [req.user.id, name, type, color, icon]
+        );
+        res.json({ id: result.rows[0].id, name, type, color, icon });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
+    try {
+        const result = await db.query(`DELETE FROM categories WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]);
+        res.json({ message: 'Deleted', rowCount: result.rowCount });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
