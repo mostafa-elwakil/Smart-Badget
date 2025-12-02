@@ -58,6 +58,19 @@ const initDb = async () => {
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='salary_deposit_day') THEN
                     ALTER TABLE users ADD COLUMN salary_deposit_day INTEGER DEFAULT 1;
                 END IF;
+                
+                -- Categories Table Migrations
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='categories') THEN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='categories' AND column_name='icon') THEN
+                        ALTER TABLE categories ADD COLUMN icon TEXT;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='categories' AND column_name='color') THEN
+                        ALTER TABLE categories ADD COLUMN color TEXT;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='categories' AND column_name='type') THEN
+                        ALTER TABLE categories ADD COLUMN type TEXT;
+                    END IF;
+                END IF;
             END
             $$;
         `);
