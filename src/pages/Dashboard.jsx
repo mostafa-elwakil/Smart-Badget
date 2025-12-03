@@ -77,6 +77,15 @@ export default function Dashboard() {
             })
             .reduce((sum, item) => sum + item.amount, 0);
 
+        const totalMonthlyIncome = baseSalary + monthlyIncomeRecords;
+
+        const monthlyExpenses = expenses
+            .filter(item => {
+                const date = new Date(item.date);
+                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+            })
+            .reduce((sum, item) => sum + item.amount, 0);
+
         setStats({
             totalBalance: totalIncome - totalExpenses + baseSalary,
             monthlyIncome: totalMonthlyIncome,
@@ -135,7 +144,7 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent className="pl-2">
                         <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                                 <AreaChart data={chartData}>
                                     <defs>
                                         <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
